@@ -21,6 +21,7 @@ import java.util.Map;
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final SmsService smsService;
 
     @Value("${app.razorpay.key-id}")
     private String keyId;
@@ -71,7 +72,11 @@ public class PaymentService {
         payment.setStatus(Payment.PaymentStatus.SUCCESS);
         payment.getOrder().setStatus(Order.OrderStatus.CONFIRMED);
         orderRepository.save(payment.getOrder());
-        return paymentRepository.save(payment);
+        Payment saved = paymentRepository.save(payment);
+
+        try { smsService.sendOrderNotificationToAdmin(saved.getOrder()); } catch (Exception ignored) {}
+
+        return saved;
     }
 
     private boolean verifySignature(String orderId, String paymentId, String signature) {

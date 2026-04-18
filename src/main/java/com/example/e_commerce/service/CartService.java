@@ -22,14 +22,15 @@ public class CartService {
         });
     }
 
-    public Cart addItem(User user, Long productId, int quantity) {
+    public Cart addItem(User user, Long productId, int quantity, String selectedImage) {
         if (quantity <= 0) throw new RuntimeException("Quantity must be at least 1");
         Cart cart = getCart(user);
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
         if (product.getStock() <= 0) throw new RuntimeException("Product is out of stock");
         Optional<CartItem> existing = cart.getItems().stream()
-                .filter(i -> i.getProduct().getId().equals(productId)).findFirst();
+                .filter(i -> i.getProduct().getId().equals(productId)
+                        && java.util.Objects.equals(i.getSelectedImage(), selectedImage)).findFirst();
         if (existing.isPresent()) {
             int newQty = existing.get().getQuantity() + quantity;
             if (newQty > product.getStock()) throw new RuntimeException("Not enough stock available");
@@ -40,7 +41,23 @@ public class CartService {
             item.setCart(cart);
             item.setProduct(product);
             item.setQuantity(quantity);
+            item.setSelectedImage(selectedImage);
             cart.getItems().add(item);
+        }
+        return cartRepository.save(cart);
+    }
+
+    public Cart updateItem(User user, Long itemId, int quantity) {
+        Cart cart = getCart(user);
+        CartItem item = cart.getItems().stream()
+                .filter(i -> i.getId().equals(itemId)).findFirst()
+                .orElseThrow(() -> new RuntimeException("Item not found"));
+        if (quantity <= 0) {
+            cart.getItems().remove(item);
+        } else {
+            if (quantity > item.getProduct().getStock())
+                throw new RuntimeException("Not enough stock available");
+            item.setQuantity(quantity);
         }
         return cartRepository.save(cart);
     }

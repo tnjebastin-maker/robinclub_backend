@@ -4,11 +4,11 @@ import com.example.e_commerce.entity.Product;
 import com.example.e_commerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -23,14 +23,14 @@ public class AdminController {
             @RequestParam BigDecimal price,
             @RequestParam Integer stock,
             @RequestParam String category,
-            @RequestParam(required = false) MultipartFile image) throws IOException {
+            @RequestParam(required = false) List<MultipartFile> images) throws IOException {
         Product p = new Product();
         p.setName(name);
         p.setDescription(description);
         p.setPrice(price);
         p.setStock(stock);
         p.setCategory(category);
-        return ResponseEntity.ok(productService.save(p, image));
+        return ResponseEntity.ok(productService.save(p, images));
     }
 
     @PutMapping("/products/{id}")
@@ -41,14 +41,14 @@ public class AdminController {
             @RequestParam BigDecimal price,
             @RequestParam Integer stock,
             @RequestParam String category,
-            @RequestParam(required = false) MultipartFile image) throws IOException {
+            @RequestParam(required = false) List<MultipartFile> images) throws IOException {
         Product p = productService.getById(id);
         p.setName(name);
         p.setDescription(description);
         p.setPrice(price);
         p.setStock(stock);
         p.setCategory(category);
-        return ResponseEntity.ok(productService.save(p, image));
+        return ResponseEntity.ok(productService.save(p, images));
     }
 
     @DeleteMapping("/products/{id}")

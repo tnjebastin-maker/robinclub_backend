@@ -4,8 +4,10 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.e_commerce.entity.Product;
 import com.example.e_commerce.repository.ProductRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.Map;
 public class ProductService {
     private final ProductRepository productRepository;
     private final Cloudinary cloudinary;
+    private final EntityManager entityManager;
 
     public List<Product> getAll() { return productRepository.findAll(); }
 
@@ -25,13 +28,25 @@ public class ProductService {
 
     public List<Product> search(String q) { return productRepository.search(q); }
 
-    public Product save(Product product, MultipartFile image) throws IOException {
-        if (image != null && !image.isEmpty()) {
-            Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
-            product.setImageUrl(uploadResult.get("secure_url").toString());
+    public Product save(Product product, List<MultipartFile> images) throws IOException {
+        if (images != null) {
+            for (MultipartFile image : images) {
+                if (!image.isEmpty()) {
+                    Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
+                    String url = uploadResult.get("secure_url").toString();
+                    if (product.getImageUrl() == null) product.setImageUrl(url);
+                    product.getImages().add(url);
+                }
+            }
         }
         return productRepository.save(product);
     }
 
-    public void delete(Long id) { productRepository.deleteById(id); }
+    @Transactional
+    public void delete(Long id) {
+        entityManager.createQuery("UPDATE OrderItem oi SET oi.product = null WHERE oi.product.id = :id")
+                .setParameter("id", id)
+                .executeUpdate();
+        productRepository.deleteById(id);
+    }
 }

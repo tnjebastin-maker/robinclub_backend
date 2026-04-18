@@ -25,4 +25,5 @@ public class CartItem {
     private Product product;
 
     private Integer quantity = 1;
+    private String selectedImage;
 }

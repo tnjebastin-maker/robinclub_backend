@@ -32,7 +32,16 @@ public class CartController {
         Long productId = Long.valueOf(body.get("productId").toString());
         int quantity = body.get("quantity") != null
                 ? Integer.parseInt(body.get("quantity").toString()) : 1;
-        return ResponseEntity.ok(cartService.addItem(getUser(user), productId, quantity));
+        String selectedImage = body.get("selectedImage") != null ? body.get("selectedImage").toString() : null;
+        return ResponseEntity.ok(cartService.addItem(getUser(user), productId, quantity, selectedImage));
+    }
+
+    @PutMapping("/update/{itemId}")
+    public ResponseEntity<Cart> updateItem(@AuthenticationPrincipal User user,
+                                            @PathVariable Long itemId,
+                                            @RequestBody Map<String, Object> body) {
+        int quantity = Integer.parseInt(body.get("quantity").toString());
+        return ResponseEntity.ok(cartService.updateItem(getUser(user), itemId, quantity));
     }
 
     @DeleteMapping("/remove/{itemId}")

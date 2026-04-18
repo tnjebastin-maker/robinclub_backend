@@ -15,9 +15,9 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final CartService cartService;
+    private final SmsService smsService;
 
     public Order placeOrder(User user, String shippingAddress) {
-        // Load cart directly with items in same transaction
         Cart cart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new RuntimeException("Cart not found"));
 
@@ -35,15 +35,17 @@ public class OrderService {
             oi.setProduct(ci.getProduct());
             oi.setQuantity(ci.getQuantity());
             oi.setPrice(ci.getProduct().getPrice());
+            oi.setSelectedImage(ci.getSelectedImage());
             order.getItems().add(oi);
             total = total.add(ci.getProduct().getPrice().multiply(BigDecimal.valueOf(ci.getQuantity())));
         }
         order.setTotalAmount(total);
         Order saved = orderRepository.save(order);
 
-        // Clear cart after order placed
         cart.getItems().clear();
         cartRepository.save(cart);
+
+        try { smsService.sendOrderNotificationToAdmin(saved); } catch (Exception ignored) {}
 
         return saved;
     }

@@ -21,10 +21,11 @@ public class OrderItem {
     private Order order;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "product_id")
+    @JoinColumn(name = "product_id", nullable = true)
     @JsonIgnoreProperties("hibernateLazyInitializer")
     private Product product;
 
     private Integer quantity;
     private BigDecimal price;
+    private String selectedImage;
 }
