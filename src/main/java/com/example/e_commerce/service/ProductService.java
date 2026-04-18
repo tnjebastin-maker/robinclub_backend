@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,15 +29,19 @@ public class ProductService {
 
     public List<Product> search(String q) { return productRepository.search(q); }
 
+    @Transactional
     public Product save(Product product, List<MultipartFile> images) throws IOException {
         if (images != null) {
+            List<String> newUrls = new ArrayList<>();
             for (MultipartFile image : images) {
                 if (!image.isEmpty()) {
                     Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
-                    String url = uploadResult.get("secure_url").toString();
-                    if (product.getImageUrl() == null) product.setImageUrl(url);
-                    product.getImages().add(url);
+                    newUrls.add(uploadResult.get("secure_url").toString());
                 }
+            }
+            if (!newUrls.isEmpty()) {
+                if (product.getImageUrl() == null) product.setImageUrl(newUrls.get(0));
+                product.getImages().addAll(newUrls);
             }
         }
         return productRepository.save(product);
