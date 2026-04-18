@@ -40,7 +40,8 @@ public class ProductService {
                 }
             }
             if (!newUrls.isEmpty()) {
-                if (product.getImageUrl() == null) product.setImageUrl(newUrls.get(0));
+                product.getImages().clear();
+                product.setImageUrl(newUrls.get(0));
                 product.getImages().addAll(newUrls);
             }
         }
